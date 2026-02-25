@@ -1,0 +1,40 @@
+{
+  "payload": {
+    "export": "cart-transform-run",
+    "target": "cart.transform.run",
+    "input": {
+      "cart": {
+        "lines": [
+          {
+            "id": "gid://shopify/CartLine/1",
+            "quantity": 1,
+            "pieces": null,
+            "source": null,
+            "width": null,
+            "heightLower": null,
+            "heightUpper": null,
+            "unit": null,
+            "opt1Amount": null,
+            "opt2Amount": null,
+            "opt3Amount": null,
+            "opt4Amount": null,
+            "opt5Amount": null,
+            "opt6Amount": null,
+            "expressPercent": null,
+            "merchandise": {
+              "__typename": "ProductVariant",
+              "id": "gid://shopify/ProductVariant/1",
+              "product": {
+                "id": "gid://shopify/Product/1",
+                "pricingRules": null
+              }
+            }
+          }
+        ]
+      }
+    },
+    "output": {
+      "operations": []
+    }
+  }
+}

@@ -1,0 +1,26 @@
+query CartTransformRunInput {
+  cart {
+    lines {
+      id
+      quantity
+      pieces: attribute(key: "Pieces") {
+        value
+      }
+      source: attribute(key: "_custom_pricing_source") {
+        value
+      }
+      width: attribute(key: "_cp_width") {
+        value
+      }
+      height: attribute(key: "_cp_height") {
+        value
+      }
+      unit: attribute(key: "_cp_unit") {
+        value
+      }
+      pricingVersion: attribute(key: "_cp_pricing_version") {
+        value
+      }
+    }
+  }
+}

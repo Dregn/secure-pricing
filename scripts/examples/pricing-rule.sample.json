@@ -1,0 +1,18 @@
+{
+  "rule_name": "Polyester Fabric - Standard",
+  "source": "polyester_fabric_section",
+  "max_piece_area_sqft": 900,
+  "overflow_markup": 1.17,
+  "shipping_surcharge": 0,
+  "active": true,
+  "slabs": [
+    { "min": 0, "max": 100, "amount": 4.5, "shipping": 0, "is_default_price": false },
+    { "min": 100.000001, "max": 500, "amount": 3.9, "shipping": 0, "is_default_price": false },
+    { "min": 500.000001, "max": 100000, "amount": 3.4, "shipping": 0, "is_default_price": false }
+  ],
+  "options": {
+    "hemming": 0,
+    "grommets": 0,
+    "pole_pocket": 0
+  }
+}
