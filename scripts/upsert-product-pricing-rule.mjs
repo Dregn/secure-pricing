@@ -4,6 +4,7 @@ import { adminGraphql, getRequiredEnv, unwrapUserErrors } from "./lib/shopify-ad
 
 const DEFAULT_RULE_FILE = "scripts/examples/pricing-rule.sample.json";
 const METAOBJECT_TYPE = "pricing_rule";
+const PRODUCT_NAMESPACE = "$app:pricing";
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -141,7 +142,7 @@ async function updateRuleMetaobject(id, fields) {
   return data.metaobjectUpdate.metaobject;
 }
 
-async function linkRuleToProduct(productId, metaobjectId) {
+async function linkRuleToProduct(productId, metaobjectId, ruleJson) {
   const data = await adminGraphql(
     `#graphql
     mutation LinkRule($metafields: [MetafieldsSetInput!]!) {
@@ -166,10 +167,17 @@ async function linkRuleToProduct(productId, metaobjectId) {
       metafields: [
         {
           ownerId: productId,
-          namespace: "custom",
+          namespace: PRODUCT_NAMESPACE,
           key: "pricing_rule",
           type: "metaobject_reference",
           value: metaobjectId,
+        },
+        {
+          ownerId: productId,
+          namespace: PRODUCT_NAMESPACE,
+          key: "pricing_rule_json",
+          type: "json",
+          value: JSON.stringify(ruleJson),
         },
       ],
     },
@@ -196,7 +204,7 @@ async function main() {
     ? await updateRuleMetaobject(existing.id, fields)
     : await createRuleMetaobject(resolvedHandle, fields);
 
-  await linkRuleToProduct(productId, metaobject.id);
+  await linkRuleToProduct(productId, metaobject.id, rule);
 
   console.log(`Rule ${existing ? "updated" : "created"}: ${metaobject.id}`);
   console.log(`Linked to product: ${productId}`);

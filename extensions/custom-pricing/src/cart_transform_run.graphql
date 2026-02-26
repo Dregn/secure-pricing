@@ -21,6 +21,31 @@ query CartTransformRunInput {
       pricingVersion: attribute(key: "_cp_pricing_version") {
         value
       }
+      computedTotal: attribute(key: "_computed_total") {
+        value
+      }
+      debugFlag: attribute(key: "_cp_debug") {
+        value
+      }
+      selectedOptions: attribute(key: "_cp_selected_options") {
+        value
+      }
+      merchandise {
+        __typename
+        ... on ProductVariant {
+          title
+          product {
+            title
+            metafield(namespace: "app--327440302081--pricing", key: "pricing_rule") {
+              value
+            }
+            pricingRuleJson: metafield(namespace: "app--327440302081--pricing", key: "pricing_rule_json") {
+              jsonValue
+              value
+            }
+          }
+        }
+      }
     }
   }
 }

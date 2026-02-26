@@ -6,7 +6,7 @@
     "dev": "shopify app dev",
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
-    "deploy": "shopify app deploy",
+    "deploy": "npm exec --yes --package @shopify/cli@latest -- shopify app deploy",
     "config:use": "shopify app config use",
     "env": "shopify app env",
     "start": "react-router-serve ./build/server/index.js",
@@ -20,7 +20,11 @@
     "typecheck": "react-router typegen && tsc --noEmit",
     "activate:transform": "node scripts/activate-cart-transform.mjs",
     "pricing:schema": "node scripts/setup-pricing-schema.mjs",
-    "pricing:upsert-rule": "node scripts/upsert-product-pricing-rule.mjs"
+    "pricing:upsert-rule": "node scripts/upsert-product-pricing-rule.mjs",
+    "pricing:sync-from-settings": "node scripts/sync-polyester-pricing-from-settings.mjs",
+    "pricing:sync-product-json": "node scripts/sync-product-pricing-json-from-metaobject.mjs",
+    "pricing:verify-product": "node scripts/verify-product-pricing-link.mjs",
+    "pricing:import-sheet": "node scripts/import-pricing-rules-from-sheet.mjs"
   },
   "type": "module",
   "engines": {

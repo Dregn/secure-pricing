@@ -71,6 +71,21 @@ App pricing lookup path:
 2. Metaobject fields -> slabs/options/limits
 3. Pricing computed using `app/lib/custom-pricing.ts`
 
+## Bulk import from sheet
+
+1. Script path:
+   - `scripts/import-pricing-rules-from-sheet.mjs`
+
+2. CSV template path:
+   - `scripts/templates/pricing-rules-template.csv`
+
+3. Run command:
+
+```bash
+cd "c:\Users\datta\Documents\Shopify Pricing App\secure-pricing-app"
+npm.cmd run pricing:import-sheet -- --file scripts/templates/pricing-rules-template.csv
+```
+
 ## Upgrading from Remix
 
 If you have an existing Remix app that you want to upgrade to React Router, please follow the [upgrade guide](https://github.com/Shopify/shopify-app-template-react-router/wiki/Upgrading-from-Remix). Otherwise, please follow the quick start guide below.

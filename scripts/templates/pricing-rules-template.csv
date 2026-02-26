@@ -1,0 +1,2 @@
+product_id,handle,rule_name,source,max_piece_area_sqft,overflow_markup,slab_metric,slab_pricing_mode,overflow_mode,overflow_unit_rate,shipping_surcharge,active,slabs_json,options_json
+8497406607552,bdsus-polyester-fabric-8497406607552,BDSUS Polyester Fabric 8497406607552,polyester_fabric_section,900,1.17,width_ft,flat_per_piece,width_unit_rate,1.99,0,true,"[{""min"":1,""max"":10,""amount"":66,""shipping"":0,""is_default_price"":false},{""min"":11,""max"":18,""amount"":83,""shipping"":0,""is_default_price"":false}]","{}"

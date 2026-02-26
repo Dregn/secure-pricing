@@ -80,11 +80,11 @@ function toSqFt(value: number, unitRaw: string): number {
     case "ft":
       return value;
     case "m":
-      return value * 3.28084;
+      return value * 3.28;
     case "cm":
-      return value * 0.0328084;
+      return value * 0.0328;
     case "mm":
-      return value * 0.00328084;
+      return value * 0.0033;
     case "in":
     case "inch":
     case "inches":

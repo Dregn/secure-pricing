@@ -1,23 +1,100 @@
-const REQUIRED_ENV = ["SHOPIFY_STORE_DOMAIN", "SHOPIFY_ADMIN_ACCESS_TOKEN"];
+import { SHOPIFY_SCRIPT_CONFIG } from "../shopify-admin.config.mjs";
 
-export function getRequiredEnv() {
-  const missing = REQUIRED_ENV.filter((key) => !process.env[key]);
-  if (missing.length > 0) {
+let cachedRuntimeToken = "";
+
+function getRequiredConfig() {
+  const shop = SHOPIFY_SCRIPT_CONFIG.storeDomain;
+  const apiVersion = SHOPIFY_SCRIPT_CONFIG.apiVersion || "2026-01";
+  const adminAccessToken = SHOPIFY_SCRIPT_CONFIG.adminAccessToken || "";
+  const clientId = SHOPIFY_SCRIPT_CONFIG.clientId || "";
+  const clientSecret = SHOPIFY_SCRIPT_CONFIG.clientSecret || "";
+
+  if (!shop) {
     throw new Error(
-      `Missing env vars: ${missing.join(", ")}. Set them before running scripts.`,
+      "Set scripts/shopify-admin.config.mjs -> storeDomain.",
     );
   }
 
-  const shop = process.env.SHOPIFY_STORE_DOMAIN;
-  const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-  const apiVersion = process.env.SHOPIFY_API_VERSION || "2026-01";
+  const hasAdminToken =
+    adminAccessToken &&
+    adminAccessToken !== "REPLACE_WITH_BDSUS_ADMIN_API_TOKEN" &&
+    adminAccessToken.startsWith("shpat_");
+
+  const hasClientCredentials =
+    clientId &&
+    clientSecret &&
+    !clientId.startsWith("REPLACE_") &&
+    !clientSecret.startsWith("REPLACE_");
+
+  if (!hasAdminToken && !hasClientCredentials) {
+    throw new Error(
+      "Set either adminAccessToken (shpat_...) OR clientId/clientSecret in scripts/shopify-admin.config.mjs.",
+    );
+  }
+
   const endpoint = `https://${shop}/admin/api/${apiVersion}/graphql.json`;
 
-  return { endpoint, token, shop, apiVersion };
+  return {
+    endpoint,
+    shop,
+    apiVersion,
+    adminAccessToken,
+    clientId,
+    clientSecret,
+    hasAdminToken,
+  };
+}
+
+export function getRequiredEnv() {
+  const config = getRequiredConfig();
+  return {
+    endpoint: config.endpoint,
+    shop: config.shop,
+    apiVersion: config.apiVersion,
+  };
+}
+
+async function fetchAdminTokenFromClientCredentials(shop, clientId, clientSecret) {
+  const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "client_credentials",
+    }),
+  });
+
+  const json = await response.json();
+  if (!response.ok || !json?.access_token) {
+    throw new Error(
+      `Client credentials token exchange failed (${response.status}): ${JSON.stringify(json)}`,
+    );
+  }
+  return json.access_token;
+}
+
+async function getRuntimeToken(config) {
+  if (cachedRuntimeToken) return cachedRuntimeToken;
+
+  if (config.hasAdminToken) {
+    cachedRuntimeToken = config.adminAccessToken;
+    return cachedRuntimeToken;
+  }
+
+  cachedRuntimeToken = await fetchAdminTokenFromClientCredentials(
+    config.shop,
+    config.clientId,
+    config.clientSecret,
+  );
+  return cachedRuntimeToken;
 }
 
 export async function adminGraphql(query, variables = {}) {
-  const { endpoint, token } = getRequiredEnv();
+  const config = getRequiredConfig();
+  const token = await getRuntimeToken(config);
+  const { endpoint } = config;
+
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {

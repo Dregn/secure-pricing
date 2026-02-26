@@ -1,7 +1,7 @@
 import { adminGraphql, getRequiredEnv, unwrapUserErrors } from "./lib/shopify-admin.mjs";
 
 const METAOBJECT_TYPE = "pricing_rule";
-const PRODUCT_NAMESPACE = "custom";
+const PRODUCT_NAMESPACE = "$app:pricing";
 const PRODUCT_KEY = "pricing_rule";
 
 async function getMetaobjectDefinitionByType(type) {
@@ -88,13 +88,15 @@ async function getProductMetafieldDefinition() {
     }`,
   );
   return (
-    data.metafieldDefinitions.nodes.find(
-      (node) => node.namespace === PRODUCT_NAMESPACE && node.key === PRODUCT_KEY,
-    ) || null
+    data.metafieldDefinitions.nodes.find((node) => {
+      if (node.key !== PRODUCT_KEY) return false;
+      if (node.namespace === PRODUCT_NAMESPACE) return true;
+      return node.namespace?.endsWith("--pricing");
+    }) || null
   );
 }
 
-async function createProductMetafieldDefinitionIfMissing() {
+async function createProductMetafieldDefinitionIfMissing(metaobjectDefinitionId) {
   const existing = await getProductMetafieldDefinition();
   if (existing) {
     console.log(
@@ -126,6 +128,12 @@ async function createProductMetafieldDefinitionIfMissing() {
         key: PRODUCT_KEY,
         ownerType: "PRODUCT",
         type: "metaobject_reference",
+        validations: [
+          {
+            name: "metaobject_definition_id",
+            value: metaobjectDefinitionId,
+          },
+        ],
       },
     },
   );
@@ -143,8 +151,8 @@ async function main() {
   console.log(`Target shop: ${shop}`);
   console.log(`Admin API version: ${apiVersion}`);
 
-  await createMetaobjectDefinitionIfMissing();
-  await createProductMetafieldDefinitionIfMissing();
+  const metaobjectDefinition = await createMetaobjectDefinitionIfMissing();
+  await createProductMetafieldDefinitionIfMissing(metaobjectDefinition.id);
 
   console.log("Pricing schema setup complete.");
 }

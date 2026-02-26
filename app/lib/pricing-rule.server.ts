@@ -3,6 +3,7 @@ import type { ExternalPricingRule } from "./custom-pricing";
 type AdminClient = {
   graphql: (query: string, init?: { variables?: Record<string, unknown> }) => Promise<Response>;
 };
+const PRODUCT_NAMESPACE = "$app:pricing";
 
 function parseJsonField(value: unknown) {
   if (typeof value !== "string" || value.trim() === "") return null;
@@ -22,7 +23,7 @@ export async function getProductPricingRule(
     query ProductPricingRule($id: ID!) {
       product(id: $id) {
         id
-        metafield(namespace: "custom", key: "pricing_rule") {
+        metafield(namespace: "${PRODUCT_NAMESPACE}", key: "pricing_rule") {
           reference {
             ... on Metaobject {
               id
