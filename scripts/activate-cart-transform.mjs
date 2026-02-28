@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { SHOPIFY_SCRIPT_CONFIG } from "./shopify-admin.config.mjs";
+import { adminGraphql as configAdminGraphql } from "./lib/shopify-admin.mjs";
 
 const shopInput = process.argv[2] || process.env.SHOP;
 if (!shopInput) {
@@ -12,6 +14,8 @@ const shop = shopInput.endsWith(".myshopify.com")
   : `${shopInput}.myshopify.com`;
 
 const apiVersion = process.env.SHOPIFY_API_VERSION || "2025-10";
+const configuredShop = (SHOPIFY_SCRIPT_CONFIG.storeDomain || "").toLowerCase();
+const canUseConfiguredGraphql = configuredShop === shop.toLowerCase();
 
 async function adminGraphql(accessToken, query, variables = {}) {
   const response = await fetch(`https://${shop}/admin/api/${apiVersion}/graphql.json`, {
@@ -41,44 +45,59 @@ function isCartTransformApiType(value) {
 async function run() {
   let prisma;
   let accessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || "";
+  const useConfiguredAuth = canUseConfiguredGraphql && !process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  const gql = async (query, variables = {}) => {
+    if (useConfiguredAuth) {
+      return configAdminGraphql(query, variables);
+    }
+    return adminGraphql(accessToken, query, variables);
+  };
   try {
-    if (!accessToken) {
+    if (!accessToken && !useConfiguredAuth) {
       try {
         prisma = new PrismaClient();
       } catch (error) {
-        throw new Error(
-          `Prisma client is not generated. Run "npx prisma generate" first.\n${error.message || error}`,
-        );
+        if (!canUseConfiguredGraphql) {
+          throw new Error(
+            `Prisma client is not generated. Run "npx prisma generate" first.\n${error.message || error}`,
+          );
+        }
       }
 
-      let session;
-      try {
-        session =
-          (await prisma.session.findFirst({
-            where: { shop, isOnline: false },
-          })) ||
-          (await prisma.session.findFirst({
-            where: { shop },
-          }));
-      } catch (error) {
-        throw new Error(
-          `Session table is unavailable in local SQLite.
+      if (prisma) {
+        let session;
+        try {
+          session =
+            (await prisma.session.findFirst({
+              where: { shop, isOnline: false },
+            })) ||
+            (await prisma.session.findFirst({
+              where: { shop },
+            }));
+        } catch (error) {
+          if (!canUseConfiguredGraphql) {
+            throw new Error(
+              `Session table is unavailable in local SQLite.
 Run with env SHOPIFY_ADMIN_ACCESS_TOKEN, or fix local Prisma migrations first.
 Original error: ${error.message || error}`,
-        );
+            );
+          }
+        }
+
+        if (session?.accessToken) {
+          accessToken = session.accessToken;
+        }
       }
 
-      if (!session?.accessToken) {
+      if (!accessToken && !canUseConfiguredGraphql) {
         throw new Error(
-          `No session token found for ${shop} in prisma Session table.
+          `No session token found for ${shop} in prisma Session table and no configured token fallback available.
 Either reinstall app on this store OR run with env SHOPIFY_ADMIN_ACCESS_TOKEN.`,
         );
       }
-      accessToken = session.accessToken;
     }
 
-    const fnData = await adminGraphql(
-      accessToken,
+    const fnData = await gql(
       `#graphql
       query ListFunctions {
         shopifyFunctions(first: 50) {
@@ -113,8 +132,7 @@ Either reinstall app on this store OR run with env SHOPIFY_ADMIN_ACCESS_TOKEN.`,
       ),
     );
 
-    const existingData = await adminGraphql(
-      accessToken,
+    const existingData = await gql(
       `#graphql
       query ListCartTransforms {
         cartTransforms(first: 20) {
@@ -136,8 +154,7 @@ Either reinstall app on this store OR run with env SHOPIFY_ADMIN_ACCESS_TOKEN.`,
       return;
     }
 
-    const createData = await adminGraphql(
-      accessToken,
+    const createData = await gql(
       `#graphql
       mutation CreateCartTransform($functionId: String!) {
         cartTransformCreate(functionId: $functionId, blockOnFailure: true) {

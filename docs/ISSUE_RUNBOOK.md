@@ -141,3 +141,48 @@ npm run activate:transform
 ### Optional verify
 - Open app in admin and confirm pricing rules page loads.
 - Confirm one rule save updates linked products `pricing_rule_json`.
+
+---
+
+## 6) `activate:transform` returns `401 Unauthorized`
+
+### Symptom
+- Running:
+  - `npm run activate:transform -- bdsus.myshopify.com`
+- Returns:
+  - `[API] Invalid API key or access token`
+
+### Cause
+- Script token from local session/env can be stale or missing for that store.
+
+### Fix
+- Use the updated script (now includes fallback auth via `scripts/shopify-admin.config.mjs` client credentials).
+- Re-run:
+
+```powershell
+cd "C:\Users\datta\Documents\Shopify Pricing App\secure-pricing-app"
+npm run activate:transform -- bdsus.myshopify.com
+```
+
+### If still failing
+- Confirm `scripts/shopify-admin.config.mjs` points to the same store and valid app credentials.
+- Re-run `npm run pricing:schema` first; then run `activate:transform` again.
+
+---
+
+## 7) `Shop is not configured for app development`
+
+### Symptom
+- `shopify app dev` fails with:
+  - `Shop is not configured for app development`
+
+### Cause
+- Main/production store is not eligible for Shopify CLI dev preview mode.
+
+### Fix options
+1. Local tunnel testing: use a valid dev store with `shopify app dev`.
+2. Main-store testing without dev store: host backend (for example Cloudflare) and set real `application_url`.
+
+### Main-store path
+- Follow:
+  - `docs/CLOUDFLARE_MAIN_STORE_DEPLOY.md`
