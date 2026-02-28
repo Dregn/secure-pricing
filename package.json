@@ -7,7 +7,7 @@
     "config:link": "shopify app config link",
     "generate": "shopify app generate",
     "deploy": "npm exec --yes --package @shopify/cli@latest -- shopify app deploy",
-    "deploy:cloudflare": "npm run build && npx wrangler deploy --config wrangler.jsonc",
+    "deploy:cloudflare": "npx wrangler deploy --config wrangler.jsonc",
     "cf:whoami": "npx wrangler whoami",
     "config:use": "shopify app config use",
     "config:set-app-url": "node scripts/set-shopify-app-url.mjs",

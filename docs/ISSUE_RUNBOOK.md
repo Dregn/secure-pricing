@@ -189,20 +189,21 @@ npm run activate:transform -- bdsus.myshopify.com
 
 ---
 
-## 8) Cloudflare deploy error: assets/directory not specified
+## 8) Cloudflare deploy/runtime error on `build/server/index.js`
 
 ### Symptom
-- Build logs show Wrangler error suggesting:
-  - `--assets=./dist`
-  - or add `assets.directory` in `wrangler.jsonc`
+- Build logs show Worker format/runtime errors such as:
+  - missing module worker default export
+  - unexpected Node imports (`fs`, `path`, `stream`, `node:perf_hooks`)
 
 ### Cause
-- Worker deploy command ran without Worker config for entrypoint/assets.
+- The app server bundle is Node runtime output and cannot be used as direct Worker entrypoint in this repo.
 
 ### Fix
-- This repo now includes:
-  - `wrangler.jsonc`
-- Use:
+- This repo now deploys a Cloudflare Worker proxy (`cloudflare/worker-proxy.mjs`) instead of trying to run Node SSR in Workers.
+- Set Cloudflare env var:
+  - `BACKEND_ORIGIN=https://<your-node-backend-domain>`
+- Deploy Worker:
 
 ```powershell
 cd "C:\Users\datta\Documents\Shopify Pricing App\secure-pricing-app"
@@ -212,3 +213,7 @@ npm run deploy:cloudflare
 ### Verify
 - Wrangler output should include deployed URL:
   - `https://<worker>.<subdomain>.workers.dev`
+- Open:
+  - `https://<worker>.<subdomain>.workers.dev/_cf_proxy_health`
+  - expect JSON with `ok: true`
+- Then confirm app URL routing works through Worker to backend.

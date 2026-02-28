@@ -1,11 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "secure-pricing",
-  "main": "build/server/index.js",
+  "main": "cloudflare/worker-proxy.mjs",
   "compatibility_date": "2026-02-28",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": "build/client",
-    "binding": "ASSETS"
+  "vars": {
+    "BACKEND_ORIGIN": "https://your-node-backend.example.com"
   }
 }
