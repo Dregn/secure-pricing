@@ -10,7 +10,19 @@ This is the shortest path to open your Pricing Rules form on the main store with
 
 ## 1) Deploy backend to Cloudflare
 
-Deploy your React Router app using your Cloudflare setup/pipeline and get a live URL, for example:
+Use the repo's Wrangler config and deploy command:
+
+```powershell
+cd "C:\Users\datta\Documents\Shopify Pricing App\secure-pricing-app"
+npm run deploy:cloudflare
+```
+
+This uses:
+- `wrangler.jsonc`
+- worker entry: `build/server/index.js`
+- static assets: `build/client`
+
+Get a live URL, for example:
 
 - `https://secure-pricing-app.<subdomain>.workers.dev`
 
@@ -51,3 +63,4 @@ Click `Cart Transform-USA` and navigate to Pricing Rules page.
 - If app still opens old URL, run deploy again and hard refresh admin.
 - If auth errors occur, verify Cloudflare URL is reachable and HTTPS.
 - Do not use `application_url = "https://example.com"` in production/main-store testing.
+- Current codebase uses Shopify Node adapter + Prisma session storage; if Worker runtime fails after deploy, migrate session storage/runtime compatibility before final cutover.

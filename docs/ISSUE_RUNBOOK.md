@@ -186,3 +186,29 @@ npm run activate:transform -- bdsus.myshopify.com
 ### Main-store path
 - Follow:
   - `docs/CLOUDFLARE_MAIN_STORE_DEPLOY.md`
+
+---
+
+## 8) Cloudflare deploy error: assets/directory not specified
+
+### Symptom
+- Build logs show Wrangler error suggesting:
+  - `--assets=./dist`
+  - or add `assets.directory` in `wrangler.jsonc`
+
+### Cause
+- Worker deploy command ran without Worker config for entrypoint/assets.
+
+### Fix
+- This repo now includes:
+  - `wrangler.jsonc`
+- Use:
+
+```powershell
+cd "C:\Users\datta\Documents\Shopify Pricing App\secure-pricing-app"
+npm run deploy:cloudflare
+```
+
+### Verify
+- Wrangler output should include deployed URL:
+  - `https://<worker>.<subdomain>.workers.dev`
