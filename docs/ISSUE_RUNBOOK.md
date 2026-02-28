@@ -181,39 +181,14 @@ npm run activate:transform -- bdsus.myshopify.com
 
 ### Fix options
 1. Local tunnel testing: use a valid dev store with `shopify app dev`.
-2. Main-store testing without dev store: host backend (for example Cloudflare) and set real `application_url`.
+2. Main-store testing without dev store: host backend and set real `application_url`.
 
 ### Main-store path
-- Follow:
-  - `docs/CLOUDFLARE_MAIN_STORE_DEPLOY.md`
-
----
-
-## 8) Cloudflare deploy/runtime error on `build/server/index.js`
-
-### Symptom
-- Build logs show Worker format/runtime errors such as:
-  - missing module worker default export
-  - unexpected Node imports (`fs`, `path`, `stream`, `node:perf_hooks`)
-
-### Cause
-- The app server bundle is Node runtime output and cannot be used as direct Worker entrypoint in this repo.
-
-### Fix
-- This repo now deploys a Cloudflare Worker proxy (`cloudflare/worker-proxy.mjs`) instead of trying to run Node SSR in Workers.
-- Set Cloudflare env var:
-  - `BACKEND_ORIGIN=https://<your-node-backend-domain>`
-- Deploy Worker:
+- Set `application_url` to your deployed app URL in `shopify.app*.toml`, then run:
 
 ```powershell
 cd "C:\Users\datta\Documents\Shopify Pricing App\secure-pricing-app"
-npm run deploy:cloudflare
+cmd /c npm exec --yes --package @shopify/cli@latest -- shopify app deploy --allow-updates
 ```
 
-### Verify
-- Wrangler output should include deployed URL:
-  - `https://<worker>.<subdomain>.workers.dev`
-- Open:
-  - `https://<worker>.<subdomain>.workers.dev/_cf_proxy_health`
-  - expect JSON with `ok: true`
-- Then confirm app URL routing works through Worker to backend.
+---
