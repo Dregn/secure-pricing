@@ -36,6 +36,7 @@ function parseArgs() {
     handlePrefix: map.get("handle-prefix") || "polyester-pricing",
     productIds,
     createOnly: map.get("create-only") === "true",
+    attachOnly: map.get("attach-only") === "true",
     dryRun: map.get("dry-run") === "true",
     sharedHandle: map.get("shared-handle") || "",
     interactive: map.get("interactive") === "true",
@@ -109,7 +110,72 @@ function parsePercent(value) {
 function readJson(filePath) {
   const full = path.resolve(filePath);
   if (!fs.existsSync(full)) throw new Error(`settings file not found: ${full}`);
-  return JSON.parse(fs.readFileSync(full, "utf8"));
+  const raw = fs.readFileSync(full, "utf8");
+  return JSON.parse(stripJsonComments(raw));
+}
+
+function stripJsonComments(input) {
+  const source = String(input || "");
+  let out = "";
+  let inString = false;
+  let isEscaped = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = 0; i < source.length; i += 1) {
+    const c = source[i];
+    const n = source[i + 1];
+
+    if (inLineComment) {
+      if (c === "\n" || c === "\r") {
+        inLineComment = false;
+        out += c;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (c === "*" && n === "/") {
+        inBlockComment = false;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (inString) {
+      out += c;
+      if (isEscaped) {
+        isEscaped = false;
+      } else if (c === "\\") {
+        isEscaped = true;
+      } else if (c === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (c === "\"") {
+      inString = true;
+      out += c;
+      continue;
+    }
+
+    if (c === "/" && n === "/") {
+      inLineComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (c === "/" && n === "*") {
+      inBlockComment = true;
+      i += 1;
+      continue;
+    }
+
+    out += c;
+  }
+
+  return out;
 }
 
 function getSection(settingsData, sectionKey) {
@@ -345,6 +411,12 @@ async function main() {
   if (!args.createOnly && args.productIds.length === 0) {
     throw new Error("Pass --product-ids (comma-separated), or use --create-only true.");
   }
+  if (args.attachOnly && !args.sharedHandle) {
+    throw new Error("Pass --shared-handle when using --attach-only true.");
+  }
+  if (args.attachOnly && args.createOnly) {
+    throw new Error("--attach-only true cannot be combined with --create-only true.");
+  }
 
   const settingsData = readJson(args.settingsFile);
   const section = getSection(settingsData, args.sectionKey);
@@ -363,6 +435,22 @@ async function main() {
 
   const sharedHandle = slugify(args.sharedHandle || "");
   if (sharedHandle) {
+    if (args.attachOnly) {
+      const existing = await getMetaobjectByHandle(sharedHandle);
+      if (!existing) {
+        throw new Error(`Shared rule not found for handle: ${sharedHandle}`);
+      }
+
+      for (const productId of args.productIds) {
+        await linkRuleToProduct(productId, existing.id, {
+          ...rule,
+          rule_name: args.ruleName || args.sectionKey,
+        });
+        console.log(`LINKED EXISTING ${sharedHandle} -> ${productId}`);
+      }
+      return;
+    }
+
     const shared = await upsertSharedRule(sharedHandle, {
       ...rule,
       rule_name: args.ruleName || args.sectionKey,

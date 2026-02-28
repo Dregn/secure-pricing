@@ -21,3 +21,6 @@ redirect_urls = [ ]
 url = "/api/public-ping"
 subpath = "pricing-debug"
 prefix = "apps"
+
+[build]
+automatically_update_urls_on_dev = true
