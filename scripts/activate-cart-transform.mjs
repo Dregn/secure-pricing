@@ -44,8 +44,8 @@ function isCartTransformApiType(value) {
 
 async function run() {
   let prisma;
-  let accessToken = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || "";
-  const useConfiguredAuth = canUseConfiguredGraphql && !process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+  let accessToken = "";
+  const useConfiguredAuth = canUseConfiguredGraphql;
   const gql = async (query, variables = {}) => {
     if (useConfiguredAuth) {
       return configAdminGraphql(query, variables);
