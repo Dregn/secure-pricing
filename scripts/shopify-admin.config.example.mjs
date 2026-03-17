@@ -1,5 +1,5 @@
 export const SHOPIFY_SCRIPT_CONFIG = {
-  // Example: "bdsus.myshopify.com"
+  // Example: "your-store.myshopify.com"
   storeDomain: "REPLACE_WITH_STORE_DOMAIN",
   // Example: "2026-01"
   apiVersion: "2026-01",
@@ -10,4 +10,3 @@ export const SHOPIFY_SCRIPT_CONFIG = {
   // Optional if using adminAccessToken above
   clientSecret: "REPLACE_WITH_CLIENT_SECRET_OR_EMPTY",
 };
-

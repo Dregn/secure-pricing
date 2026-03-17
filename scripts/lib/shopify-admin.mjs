@@ -2,8 +2,18 @@ import { SHOPIFY_SCRIPT_CONFIG } from "../shopify-admin.config.mjs";
 
 let cachedRuntimeToken = "";
 
+function normalizeStore(input) {
+  if (!input) return "";
+  const normalized = String(input).trim();
+  return normalized
+    .replace(/^https?:\/\/(www\.)?/i, "")
+    .replace(/\/.*$/, "")
+    .trim();
+}
+
 function getRequiredConfig() {
-  const shop = SHOPIFY_SCRIPT_CONFIG.storeDomain;
+  const configuredShop = process.env.SHOPIFY_STORE_DOMAIN || SHOPIFY_SCRIPT_CONFIG.storeDomain;
+  const shop = normalizeStore(configuredShop);
   const apiVersion = SHOPIFY_SCRIPT_CONFIG.apiVersion || "2026-01";
   const adminAccessToken = SHOPIFY_SCRIPT_CONFIG.adminAccessToken || "";
   const clientId = SHOPIFY_SCRIPT_CONFIG.clientId || "";
@@ -11,13 +21,13 @@ function getRequiredConfig() {
 
   if (!shop) {
     throw new Error(
-      "Set scripts/shopify-admin.config.mjs -> storeDomain.",
+      "Set scripts/shopify-admin.config.mjs -> storeDomain, or set SHOPIFY_STORE_DOMAIN env var (example: https://www.backdropsource.de or backdropsource.de).",
     );
   }
 
   const hasAdminToken =
     adminAccessToken &&
-    adminAccessToken !== "REPLACE_WITH_BDSUS_ADMIN_API_TOKEN" &&
+    adminAccessToken !== "REPLACE_WITH_STORE_ADMIN_API_TOKEN" &&
     adminAccessToken.startsWith("shpat_");
 
   const hasClientCredentials =
